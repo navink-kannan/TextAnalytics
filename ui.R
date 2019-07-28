@@ -15,11 +15,20 @@ ui <- shinyUI(
       sidebarPanel(  
         
         fileInput("file", "Upload data (txt file) "),
-        checkboxInput("adj", "adjective (ADJ)", TRUE),
-        checkboxInput("noun", "noun(NOUN)", TRUE),
-        checkboxInput("propn", "proper noun (PROPN)", TRUE),
-        checkboxInput("adv", "adverb (ADV)", FALSE),
-        checkboxInput("verb", "verb (VERB)", FALSE),
+        
+        selectInput("lang", "Choose the language:",
+                    list(`english`="english",
+                         `french`= "french",
+                         `dutch`="dutch"), selected="english"),
+        
+        checkboxGroupInput(inputId='checkopt',  "Choose POSTag:",
+                           c("adjective (ADJ)" = "ADJ",
+                             "noun(NOUN)" = "NOUN",
+                             "proper noun (PROPN)" = "PROPN",
+                             "adverb (ADV)" = "ADV",
+                             "verb (VERB)" = "VERB"),selected = c("ADJ","NOUN","PROPN")
+        ),  
+        
         downloadButton("downloadData", "Download")),
       
       
@@ -30,8 +39,17 @@ ui <- shinyUI(
                     tabPanel(value="hide","Overview",
                              h4(p("Data input")),
                              p("This app supports only text data file.",align="justify"),
-                             p("Please refer to the link below for sample file."),
-                             #a(href="","Sample data input file"),   
+                             p("Please refer to the link below for sample english file."),
+                             a(href="https://github.com/navink-kannan/sample/blob/master/sample_dutch.txt","Sample english data input file:-"),   
+                             br(),
+                             br(),
+                             p("Please refer to the link below for sample french file."),
+                             a(href="https://github.com/navink-kannan/sample/blob/master/sample_french.txt","Sample french data input file:-"),   
+                             br(),
+                             br(),
+                             p("Please refer to the link below for sample dutch file."),
+                             a(href="https://github.com/navink-kannan/sample/blob/master/sample_dutch.txt","Sample dutch data input file:-"),   
+                             br(),
                              br(),
                              h4('How to use this App'),
                              p('To use this app, click on', 
@@ -48,36 +66,4 @@ ui <- shinyUI(
                     tabPanel(value="hide","Cooccurence Analysis", 
                              plotOutput('plot4'))
         )))))
-
-
-annotated_table <- function(data)
-{
-  x <- udpipe_annotate(english_model, x = data)
-  x <- as.data.frame(x)
-  return(x)
-}
-
-cooccurence_analysis <- function(data, sub_title)
-{
-  
-  word_cooc <- cooccurrence(     
-    x = data, 
-    term = "lemma", 
-    group = c("doc_id", "paragraph_id", "sentence_id"))  
-  
-  
-  wordnetwork <- head(word_cooc, 30)
-  wordnetwork <- igraph::graph_from_data_frame(wordnetwork) # needs edgelist in first 2 colms.
-  
-  cooc_plot<- ggraph(wordnetwork, layout = "fr") +  
-    
-    geom_edge_link(aes(width = cooc, edge_alpha = cooc), edge_colour = "orange") +  
-    geom_node_text(aes(label = name), col = "darkgreen", size = 4) +
-    
-    theme_graph(base_family = "Arial Narrow") +  
-    theme(legend.position = "none") +
-    
-    labs(title = "Cooccurrences within 3 words distance", subtitle = sub_title)
-  return(cooc_plot)
-}
 

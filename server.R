@@ -3,14 +3,14 @@
 #---------------------------------------------------------------------#
 
 
-# Define ui function
-model <- udpipe_download_model(language = "english")
-english_model <- udpipe_load_model(model$file_model)
-
 server <- shinyServer(function(input, output, session) {
   
   annotated_table <- function(data)
   {
+    
+    model <- udpipe_download_model(language = input$lang, overwrite=FALSE)
+    english_model <- udpipe_load_model(model$file_model)
+    
     x <- udpipe_annotate(english_model, x = data)
     x <- as.data.frame(x)
     return(x)
@@ -44,25 +44,26 @@ server <- shinyServer(function(input, output, session) {
   Dataset <- reactive({
     if (is.null(input$file)) { return(NULL) }
     else{
+      #readLines(input$file$datapath)
       Data <- readLines(input$file$datapath)
       Data <-  str_replace_all(Data, "<.*?>", "")
       upos_tab<- annotated_table(Data)
       
       all_adjs=all_nouns=all_propns=all_advs=all_verbs = upos_tab[FALSE,]
       
-      if(input$adj == TRUE)
+      if((input$checkopt %in% 'ADJ') == TRUE)
         all_adjs = upos_tab %>% subset(., upos %in% "ADJ")
       
-      if(input$noun == TRUE)
+      if((input$checkopt %in% 'NOUN')  == TRUE)
         all_nouns = upos_tab %>% subset(., upos %in% "NOUN")
       
-      if(input$propn == TRUE)
+      if((input$checkopt %in% 'PROPN')  == TRUE)
         all_propns = upos_tab %>% subset(., upos %in% "PROPN")
       
-      if(input$adv == TRUE)
+      if((input$checkopt %in% 'ADV')  == TRUE)
         all_advs = upos_tab %>% subset(., upos %in% "ADV")
       
-      if(input$verb == TRUE)
+      if((input$checkopt %in% 'VERB')  == TRUE)
         all_verbs = upos_tab %>% subset(., upos %in% "VERB")
       
       upos_data<-rbind(all_adjs, all_nouns, all_propns, all_advs, all_verbs)
@@ -80,8 +81,6 @@ server <- shinyServer(function(input, output, session) {
       return(Data)
     }
   })
-  
-  
   
   
   output$plot2 = renderDataTable({
@@ -138,15 +137,15 @@ server <- shinyServer(function(input, output, session) {
   
   output$plot4 = renderPlot({ 
     subtitle=""
-    if(input$adj == TRUE)
+    if((input$checkopt %in% 'ADJ')  == TRUE)
       subtitle="Adjective"
-    if(input$noun == TRUE)
+    if((input$checkopt %in% 'NOUN')  == TRUE)
       if (subtitle=="") subtitle="Noun" else  subtitle=paste(subtitle,"Noun", sep=",")
-      if(input$propn == TRUE)
+      if((input$checkopt %in% 'PROPN')  == TRUE)
         if (subtitle=="") subtitle="Proper Noun" else  subtitle=paste(subtitle,"Proper Noun", sep=",")
-        if(input$adv == TRUE)
+        if((input$checkopt %in% 'ADV')  == TRUE)
           if (subtitle=="") subtitle="Adverb" else  subtitle=paste(subtitle,"Adverb", sep=",")
-          if(input$verb == TRUE)
+          if((input$checkopt %in% 'VERB')  == TRUE)
             if (subtitle=="") subtitle="Verb" else  subtitle=paste(subtitle,"Verb", sep=",")
             
             plot_cooc<-cooccurence_analysis(Dataset(), subtitle)
