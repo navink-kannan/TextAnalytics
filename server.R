@@ -4,7 +4,8 @@
 
 
 # Define ui function
-english_model <- udpipe_load_model("./english-ewt-ud-2.4-190531.udpipe")
+model <- udpipe_download_model(language = "english")
+english_model <- udpipe_load_model(model$file_model)
 
 server <- shinyServer(function(input, output, session) {
   
